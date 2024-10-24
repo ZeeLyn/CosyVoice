@@ -1,0 +1,1 @@
+pyinstaller -D .\runtime\python\fastapi\server.py  -p "C:\Users\zeely\.conda\envs\cosyvoice\lib\site-packages\" --add-data="C:\Users\zeely\.conda\envs\cosyvoice\lib\site-packages\inflect:inflect" --hidden-import=inflect --name=server --distpath='./dist' --noconfirm

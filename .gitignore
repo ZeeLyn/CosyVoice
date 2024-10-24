@@ -46,6 +46,10 @@ compile_commands.json
 *.m4a
 *.aac
 *.pt
+*.mp3
 pretrained_models/*
 *_pb2_grpc.py
 *_pb2.py
+*.spec
+prompt_pth/
+dist/
