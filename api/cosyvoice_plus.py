@@ -20,20 +20,23 @@ class CosyVoicePlus(CosyVoice):
         seed = random.randint(1, 100000000)
         return seed
     
-    def text_normalize(self, text, split=True,token_max_n=20,token_min_n=15,merge_len=10,comma_split=False):
+    def text_normalize(self, text, split=True,token_max_n=40,token_min_n=30,merge_len=20,comma_split=True):
         text = text.strip()
         if contains_chinese(text):
             if self.frontend.use_ttsfrd:
                 text = self.frontend.frd.get_frd_extra_info(text, 'input')
             else:
                 text = self.frontend.zh_tn_model.normalize(text)
+            
             text = text.replace("\n", "")
             text = replace_blank(text)
             text = replace_corner_mark(text)
             text = text.replace(".", "。")
+            text = text.replace(",", "，")
             text = text.replace(" - ", "，")
             text = remove_bracket(text)
             text = re.sub(r'[，,、]+$', '。', text)
+            print(text)
             texts = list(split_paragraph(text, partial(self.frontend.tokenizer.encode, allowed_special=self.frontend.allowed_special), "zh", token_max_n=token_max_n,
                                          token_min_n=token_min_n, merge_len=merge_len, comma_split=comma_split))
         else:

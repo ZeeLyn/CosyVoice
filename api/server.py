@@ -30,7 +30,7 @@ from cosyvoice.utils.file_utils import load_wav
 import torchaudio
 import torch
 from pydub import AudioSegment
-
+from faster_whisper import WhisperModel
 
 app = FastAPI()
 # set cross region allowance
@@ -114,6 +114,19 @@ async def inference_instruct(tts_text: str = Form(), spk_id: str = Form(), instr
     model_output = cosyvoice.inference_instruct(tts_text, spk_id, instruct_text)
     return StreamingResponse(generate_data(model_output))
 
+
+
+@app.post("/inference_audio_to_text")
+async def inference_instruct(audio: str = Form()):
+    segments, info = whisperModel.transcribe(os.path.join(args.prompt_audio_dir,audio), beam_size=5)
+    # print("Detected language '%s' with probability %f" % (info.language, info.language_probability))
+    result=''
+    for segment in segments:
+        # print(segment)
+        # print("[%.2fs -> %.2fs] %s" % (segment.start, segment.end, segment.text))
+        result+= segment.text
+    return JSONResponse({'text':result})
+        
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--port',
@@ -135,4 +148,8 @@ if __name__ == '__main__':
                     help='prompt audio目录')
     args = parser.parse_args()
     cosyvoice = CosyVoicePlus(args.model_dir)
+    
+    model_size = "large-v2"
+    # Run on GPU with FP16
+    whisperModel = WhisperModel(model_size, device="cuda", compute_type="float16")
     uvicorn.run(app, host="0.0.0.0", port=args.port)
