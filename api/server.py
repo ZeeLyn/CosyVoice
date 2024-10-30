@@ -56,7 +56,6 @@ async def inference_sft(tts_text: str = Form(), spk_id: str = Form()):
 
 @app.post("/inference_zero_shot")
 async def inference_zero_shot(tts_text: str = Form(), prompt_text: str = Form(), prompt_wav: UploadFile = File()):
-    print(type(prompt_wav.file))
     prompt_speech_16k = load_wav(prompt_wav.file, 16000)
     model_output = cosyvoice.inference_zero_shot(tts_text, prompt_text, prompt_speech_16k)
     for i,j in enumerate(model_output):
@@ -134,17 +133,17 @@ if __name__ == '__main__':
                         default=50000)
     parser.add_argument('--model_dir',
                         type=str,
-                        default='iic/CosyVoice-300M',
+                        default='pretrained_models/CosyVoice-300M-Instruct',
                         help='local path or modelscope repo id')
     
     parser.add_argument('--output_dir',
                     type=str,
-                    default='output/',
+                    default='D:\\CosyVoice\\audio_clone_output',
                     help='克隆输出目录')
     
     parser.add_argument('--prompt_audio_dir',
                     type=str,
-                    default='prompt_audio/',
+                    default='D:\\CosyVoice\\',
                     help='prompt audio目录')
     args = parser.parse_args()
     cosyvoice = CosyVoicePlus(args.model_dir)

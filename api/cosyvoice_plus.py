@@ -20,7 +20,7 @@ class CosyVoicePlus(CosyVoice):
         seed = random.randint(1, 100000000)
         return seed
     
-    def text_normalize(self, text, split=True,token_max_n=40,token_min_n=30,merge_len=20,comma_split=True):
+    def text_normalize(self, text, split=True,token_max_n=80,token_min_n=60,merge_len=20,comma_split=False):
         text = text.strip()
         if contains_chinese(text):
             if self.frontend.use_ttsfrd:
