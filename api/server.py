@@ -16,7 +16,6 @@ import sys
 import argparse
 import logging
 import time
-logging.getLogger('matplotlib').setLevel(logging.WARNING)
 from fastapi import FastAPI, UploadFile, Form, File
 from fastapi.responses import StreamingResponse,JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -26,11 +25,13 @@ ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append('{}/..'.format(ROOT_DIR))
 sys.path.append('{}/../third_party/Matcha-TTS'.format(ROOT_DIR))
 from api.cosyvoice_plus import CosyVoicePlus
-from cosyvoice.utils.file_utils import load_wav
+from cosyvoice.utils.file_utils import load_wav,logging
 import torchaudio
-import torch
 from pydub import AudioSegment
 from faster_whisper import WhisperModel
+from cosyvoice.utils.common import set_all_random_seed
+
+logging.getLogger().setLevel(logging.WARN)
 
 app = FastAPI()
 # set cross region allowance
@@ -64,7 +65,10 @@ async def inference_zero_shot(tts_text: str = Form(), prompt_text: str = Form(),
 
 @app.post("/inference_clone")
 async def inference_zero_shot(tts_text: str = Form(), prompt_text: str = Form(), prompt_wav: str = Form(), speed:float=Form()):
-    prompt_speech_16k = load_wav(os.path.join(args.prompt_audio_dir,prompt_wav), 16000)
+    prompt_speech_16k = cosyvoice.postprocess(load_wav(os.path.join(args.prompt_audio_dir,prompt_wav), 16000))
+    
+    set_all_random_seed(cosyvoice.generate_seed())
+    
     model_output = cosyvoice.inference_clone(tts_text, prompt_text, prompt_speech_16k,prompt_wav,stream=False,speed=speed)
     file= str(time.time())
     
@@ -82,10 +86,10 @@ async def inference_zero_shot(tts_text: str = Form(), prompt_text: str = Form(),
     
     file_list=[]
     final_audio = AudioSegment.empty()
-    for i,j in enumerate(model_output):
-        f=os.path.join(args.output_dir,file+"-{}.wav".format(i))
+    for idx,data in enumerate(model_output):
+        f=os.path.join(args.output_dir,file+"-{}.wav".format(idx))
         file_list.append(f)
-        torchaudio.save(f, j['tts_speech'], 22050)
+        torchaudio.save(f, data['tts_speech'], cosyvoice.sample_rate)
         audio = AudioSegment.from_wav(f)
         final_audio+=audio
         audio=None
@@ -133,7 +137,7 @@ if __name__ == '__main__':
                         default=50000)
     parser.add_argument('--model_dir',
                         type=str,
-                        default='pretrained_models/CosyVoice-300M-Instruct',
+                        default='pretrained_models/CosyVoice2-0.5B',
                         help='local path or modelscope repo id')
     
     parser.add_argument('--output_dir',
@@ -146,7 +150,7 @@ if __name__ == '__main__':
                     default='D:\\CosyVoice\\',
                     help='prompt audio目录')
     args = parser.parse_args()
-    cosyvoice = CosyVoicePlus(args.model_dir)
+    cosyvoice = CosyVoicePlus(args.model_dir,load_jit=True)
     
     model_size = "large-v2"
     # Run on GPU with FP16
