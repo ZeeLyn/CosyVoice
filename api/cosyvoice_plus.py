@@ -6,7 +6,6 @@ from cosyvoice.utils.file_utils import logging
 import torch
 import hashlib
 import os
-import random
 import librosa
 
 max_val = 0.8
@@ -15,9 +14,7 @@ class CosyVoicePlus(CosyVoice2):
     # def __init__(self, model_dir, load_jit=True, load_onnx=False, fp16=True):
     #     super().__init__(model_dir, load_jit=load_jit, load_onnx=load_onnx, fp16=fp16)
     #     self.speech_token_cache={}
-    def generate_seed(self):
-        seed = random.randint(1, 100000000)
-        return seed
+
     
     
     def postprocess(self,speech, top_db=60, hop_length=220, win_length=440):

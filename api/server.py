@@ -30,6 +30,7 @@ import torchaudio
 from pydub import AudioSegment
 from faster_whisper import WhisperModel
 from cosyvoice.utils.common import set_all_random_seed
+import random
 
 logging.getLogger().setLevel(logging.WARN)
 
@@ -42,6 +43,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"])
 
+
+def generate_seed():
+    seed = random.randint(1, 100000000)
+    return seed
 
 def generate_data(model_output):
     for i in model_output:
@@ -67,7 +72,7 @@ async def inference_zero_shot(tts_text: str = Form(), prompt_text: str = Form(),
 async def inference_zero_shot(tts_text: str = Form(), prompt_text: str = Form(), prompt_wav: str = Form(), speed:float=Form()):
     prompt_speech_16k = cosyvoice.postprocess(load_wav(os.path.join(args.prompt_audio_dir,prompt_wav), 16000))
     
-    set_all_random_seed(cosyvoice.generate_seed())
+    set_all_random_seed(generate_seed())
     
     model_output = cosyvoice.inference_clone(tts_text, prompt_text, prompt_speech_16k,prompt_wav,stream=False,speed=speed)
     file= str(time.time())
